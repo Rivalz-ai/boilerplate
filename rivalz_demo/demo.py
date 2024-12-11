@@ -3,8 +3,9 @@ from dotenv import load_dotenv
 from fpdf import FPDF
 import os
 import time
-
+from pathlib import Path
 load_dotenv()
+CURRENT_DIR = Path(__file__).parent
 
 def create_sample_pdf():
     pdf = FPDF()
@@ -19,7 +20,7 @@ def create_sample_pdf():
     
     # Save the PDF
     pdf.output("sample.pdf")
-    return "sample.pdf"
+    return CURRENT_DIR / "sample.pdf"
 
 def main():
     client = RivalzClient(os.getenv("RIVALZ_SECRET_TOKEN"))
@@ -30,13 +31,14 @@ def main():
         pdf_path = create_sample_pdf()
         
         # Upload the PDF file
-        print("Uploading PDF file...")
+        print("Uploading PDF file...",pdf_path)
+
         result = client.upload_file(pdf_path)
-        print(f"File uploaded with IPFS hash: {result['ipfs_hash']}")
+        print(f"File uploaded with IPFS hash: {result}")
 
         # Create a knowledge base
         print("\nCreating knowledge base...")
-        kb = client.create_knowledge_base("Test Knowledge Base", pdf_path)
+        kb = client.create_rag_knowledge_base(pdf_path,"Test Knowledge Base")
         print(f"Knowledge base created with ID: {kb['id']}")
 
         # Wait for knowledge base to be ready
@@ -50,8 +52,8 @@ def main():
 
         # Chat with the knowledge base
         print("\n\nTesting chat...")
-        response = client.chat(kb["id"], "What topics does this document discuss?")
-        print(f"Chat response: {response['message']}")
+        response = client.create_chat_session(kb["id"], "What topics does this document discuss?")
+        print(f"Chat response: {response}")
 
     except Exception as e:
         print(f"\nError occurred: {e}")
