@@ -1,0 +1,2 @@
+rivalz-client
+python-dotenv 
